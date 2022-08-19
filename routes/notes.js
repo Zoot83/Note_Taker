@@ -1,6 +1,6 @@
 const fb = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
-const { readAndAppend, readFromFile } = require('../helpers/fsUtils');
+const { readAndAppend, readFromFile, writeToFile } = require('../helpers/fsUtils');
 
 // GET Route for retrieving all the feedback
 fb.get('/', (req, res) =>
@@ -18,7 +18,7 @@ fb.post('/', (req, res) => {
     const newNote = {
       title,
       text,
-      note_id: uuidv4()
+      id: uuidv4()
     };
 
     readAndAppend(newNote, './db/db.json');
@@ -32,6 +32,21 @@ fb.post('/', (req, res) => {
   } else {
     res.json('Error in posting feedback');
   }
+});
+
+
+fb.delete('/:id', (req, res) => {
+  const noteId = req.params.id;
+  readFromFile('./db/db.json')
+    .then((data) => JSON.parse(data))
+    .then((json) => {
+
+      const result = json.filter((id) => id.id !== noteId);
+
+      writeToFile('./db/db.json', result);
+
+      res.json(`Item ${noteId} has been deleted`);
+    });
 });
 
 module.exports = fb;
